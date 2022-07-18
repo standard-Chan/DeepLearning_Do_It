@@ -9,16 +9,15 @@ class Unit():
       return y_hat
     
     def backprop(self, x, err): # 역방향 계산 (오차값을 이용하여, 업데이트)
-      w_grad = w + x * err  # x는 가중치 변화율
-      b_grad = b + 1 * err  # 1은 절편 변화율
+      w_grad = x * err  # x는 가중치 변화율
+      b_grad = 1 * err  # 1은 절편 변화율
       return w_grad, b_grad
     
     def fit(self, x, y, epochs = 100):  # 훈련
       for i in range(epochs):
         for x_i, y_i in zip(x,y):
-          y_hat = forpass(x_i)
-          err = y - y_hat
-          w_grad, b_grad = backprop(x_i, err)
-          self.w = w_grad
-          self.b = b_grad
-          
+          y_hat = self.forpass(x_i)
+          err = -(y_i - y_hat)
+          w_grad, b_grad = self.backprop(x_i, err)
+          self.w -= w_grad
+          self.b -= b_grad
