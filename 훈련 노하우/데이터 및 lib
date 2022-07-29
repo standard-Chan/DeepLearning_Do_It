@@ -1,0 +1,22 @@
+import matplotlib.pyplot as plt
+import numpy as np
+from sklearn.datasets import load_breast_cancer
+from sklearn.model_selection import train_test_split
+from sklearn.linear_model import SGDClassifier
+
+#데이터 셋 분할
+
+cancer = load_breast_cancer()
+x = cancer.data
+y = cancer.target
+
+# 훈련:테스트  8:2 분할
+x_train_all, x_test, y_train_all, y_test = train_test_split(x,y, stratify=y, test_size=0.2, random_state=42)
+print(x_train_all.shape, x_test.shape, y_train_all.shape, y_test.shape)
+
+# (훈련:검증):테스트  (6:2):2
+x_train, x_val, y_train, y_val = train_test_split(x_train_all, y_train_all, stratify=y_train_all, test_size=0.2, random_state=42)
+
+# 훈련 데이터셋으로 train -> 검증 데이터셋으로 score
+sgd = SGDClassifier(loss='log', random_state=42)
+sgd.fit(x_train, y_train)
