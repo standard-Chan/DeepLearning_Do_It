@@ -1,0 +1,101 @@
+# 데이터 전처리 : 특성의 스케일 조정
+
+print(cancer.feature_names[[2,3]])
+plt.boxplot(x_train[:, :])
+plt.xlabel('feature')
+plt.ylabel('value')
+plt.show()
+
+# 그래프를 보면 value의 스케일이 큰 4,14,24의 feature은 다른 feature에 맞게 조정이 필요하다.
+# 스케일이 큰 경우 가중치가 커져서 손실함수가 최소가 되는 지점을 지나칠 수 있다.
+
+# 스케일에 따른 가중치 확인
+
+class SingleLayer():
+    def __init__(self, learning_rate=0.1):
+        self.w = None
+        self.b = None
+        self.losses = []
+        self.w_history = []
+        self.lr = learning_rate #학습률 = 가중치의 업데이트 양 조절
+    
+    def forpass(self, x):
+        z = np.sum(x*self.w) + self.b
+        return z
+    
+    def backprop(self, x, err):
+        w_grad = x*err
+        b_grad = 1*err
+        return w_grad, b_grad
+
+    def activation(self, z):
+        z = np.clip(z, -100, None)
+        a = 1 / (1+np.exp(-z))
+        return a
+    
+    def fit(self, x, y, epochs=100):
+        self.w = np.ones(x.shape[1])
+        self.b = 0
+        self.w_history.append(self.w.copy())
+        np.random.seed(42)
+        for i in range(epochs):
+            loss = 0
+            indexes = np.random.permutation(np.arange(len(x))) #인덱스 섞기
+            for i in indexes:
+                z = self.forpass(x[i])
+                a = self.activation(z)
+                err = -(y[i] - a)
+                w_grad, b_grad = self.backprop(x[i], err)
+                self.w -= self.lr * w_grad               # 학습률 적용한 가중치 업데이트
+                self.b -= b_grad
+                self.w_history.append(self.w.copy())     # 가중치 기록
+                a = np.clip(a, 1e-10, 1-1e-10)
+                loss += -(y[i]*np.log(a)+(1-y[i])*np.log(1-a))
+            self.losses.append(loss/len(y))    
+        
+    def predict(self, x):
+        z = [self.forpass(x_i) for x_i in x]
+        return np.array(z) > 0
+
+    def score(self, x, y):
+        return np.mean(self.predict(x) == y)
+        
+
+# 스케일 조정을 하지 않은 경우 : 가중치 그래프
+layer1 = SingleLayer()
+layer1.fit(x_train, y_train)
+layer1.score(x_val, y_val)
+
+w2 = []
+w3 = []
+for w in layer1.w_history:
+    w2.append(w[2])
+    w3.append(w[3])
+
+plt.plot(w2, w3)
+plt.xlabel('w[2]')
+plt.ylabel('w[3]')
+plt.plot(w2[-1], w3[-1], 'ro')
+plt.show()
+
+# 그래프를 보면, 스케일이 커서 가중치가 수렴하지 않고, 요동치는것을 확인 할 수 있다.
+
+
+
+## 표준화를 이용하여 스케일 조정을 한 가중치 그래프
+
+#표준화 구현
+train_mean = np.mean(x_train, axis=0)  #평균
+train_std = np.std(x_train, axis=0)    # 편차 , axis=0 은 1차원 계산
+x_train_scaled = (x_train - train_mean) / train_std
+
+layer2 = SingleLayer()
+layer2.fit(x_train_scaled, y_train)
+w2=[]
+w3=[]
+for w in layer2.w_history:
+    w2.append(w[2])
+    w3.append(w[3])
+plt.plot(w2, w3)
+plt.plot(w2[-1], w3[-1], 'ro')
+plt.show()
