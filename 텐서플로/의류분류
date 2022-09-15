@@ -1,0 +1,32 @@
+import tensorflow as tf
+import matplotlib.pyplot as plt
+import numpy as np
+from sklearn.model_selection import train_test_split
+
+(x_train_all, y_train_all), (x_test, y_test) = tf.keras.datasets.fashion_mnist.load_data() # 패션 데이터셋 불러오기
+
+# 데이터 개수 확인
+print(x_train_all.shape, y_train_all.shape)
+plt.imshow(x_train_all[0], cmap='gray')
+
+plt.show()  # 데이터 이미지 시각화
+
+# 타깃의 내용과 의미
+class_names = ['티셔츠', '바지', '스웨터', '드레스', '코트', '샌들', '셔츠', '스니커즈', '가방', '앵클부츠']
+# 출력방법 : print(class_names[y_train_all[N]])
+
+# 타깃 분포 확인
+np.bincount(y_train_all)
+
+# 훈련/검증 세트 나누기
+x_train, x_val, y_train, y_val = train_test_split(x_train_all, y_train_all, stratify=y_train_all, test_size=0.2, random_state=42)
+print(np.bincount(y_train))
+print(np.bincount(y_val))
+
+#입력 데이터 정규화하기
+x_train = x_train / 255
+x_val = x_val /255
+
+# 훈련/ 검증 세트의 차원 변경
+x_train = x_train.reshape(-1, 784)
+x_val = x_val.reshape(-1, 784)
